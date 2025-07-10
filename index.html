@@ -1,100 +1,175 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>DORTZ</title>
+  <meta charset="UTF-8" />
+  <title>DORTZ - Max Dots Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="https://api.iconify.design/ph/dots-nine-bold.svg" type="image/svg+xml">
   <style>
-    body {
-      background: #0e0e0e;
-      color: #eee;
-      font-family: sans-serif;
-      padding: 2rem;
-      max-width: 700px;
-      margin: auto;
-    }
-    h1 {
-      color: #9d4edd;
-    }
-    textarea {
-      width: 100%;
-      height: 100px;
-      padding: 1rem;
-      font-size: 1rem;
-      background: #1c1c1c;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      resize: none;
-    }
-    button {
-      background: #9d4edd;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      margin-top: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 1rem;
-      font-weight: bold;
-    }
-    #response {
-      margin-top: 2rem;
-      background: #1a1a1a;
-      padding: 1rem;
-      border-radius: 8px;
-      white-space: pre-wrap;
-    }
+    :root {
+      --user-bg: #9d4edd;
+      --bot-bg: #2a2a2a;
+      --bg: #0f0f0f;
+      --text: #eee;
+      --accent: #c77dff;
+      --radius: 14px;
+    }* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  background: #1a1a1a;
+  padding: 1rem;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+
+#chat {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.bubble {
+  max-width: 80%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  line-height: 1.5;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  animation: fadeIn 0.3s ease;
+}
+
+.user {
+  background-color: var(--user-bg);
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 0;
+}
+
+.bot {
+  background-color: var(--bot-bg);
+  align-self: flex-start;
+  border-bottom-left-radius: 0;
+}
+
+footer {
+  padding: 1rem;
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+textarea {
+  width: 100%;
+  height: 60px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  background: #222;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  resize: none;
+}
+
+button {
+  background: var(--user-bg);
+  color: #fff;
+  border: none;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 0.8rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: var(--accent);
+}
+
+label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+@media (max-width: 600px) {
+  .bubble { max-width: 95%; }
+  textarea { height: 50px; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
   </style>
 </head>
 <body>
-  <h1>⚡ DORTZ Chat</h1>
+  <header>DORTZ 🟣 Max Dots Chat</header>  <div id="chat">
+    <div class="bot bubble">Welcome to <strong>DORTZ</strong>. Ask me anything.</div>
+  </div>  <footer>
+    <textarea id="userInput" placeholder="Type your message..."></textarea>
+    <label><input type="checkbox" id="maxDotsToggle"> Max Dots Mode (1M Token Brain 🧠)</label>
+    <button onclick="sendMessage()">Send</button>
+  </footer>  <script>
+    const chat = document.getElementById("chat");
 
-  <textarea id="userInput" placeholder="Ask me anything..."></textarea>
-  <label>
-    <input type="checkbox" id="maxDotsToggle" />
-    Max Dots Mode (1,000,000 Token Brain 🧠)
-  </label>
-  <button onclick="sendMessage()">Send</button>
+    function appendMessage(text, sender) {
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${sender}`;
+      bubble.textContent = text;
+      chat.appendChild(bubble);
+      chat.scrollTop = chat.scrollHeight;
+    }
 
-  <div id="response">🤖 Response will appear here</div>
-
-  <script>
     async function sendMessage() {
-      const input = document.getElementById("userInput").value;
+      const input = document.getElementById("userInput");
+      const message = input.value.trim();
       const maxDots = document.getElementById("maxDotsToggle").checked;
-      const resBox = document.getElementById("response");
 
-      resBox.textContent = "⏳ Thinking...";
+      if (!message) return;
+      appendMessage(message, "user");
+      input.value = "";
+
+      appendMessage("DORTZ is thinking...", "bot");
 
       try {
-        const res = await fetch("/chat", {
+        const response = await fetch("/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: input,
-            maxDots: maxDots
-          })
+          body: JSON.stringify({ message, maxDots })
         });
 
-        const data = await res.json();
+        const data = await response.json();
+        const botBubble = chat.querySelector(".bot:last-child");
 
         if (data.choices && data.choices[0]) {
-          resBox.innerHTML =
-            `<b>🧠 Model:</b> ${data.used_model}<br><br>` +
-            data.choices[0].message.content;
+          botBubble.innerHTML = `<b>Model:</b> ${data.used_model}<br><br>${data.choices[0].message.content}`;
         } else {
-          resBox.textContent = "⚠️ Error: " + (data.error || "Unknown response");
+          botBubble.textContent = "⚠️ Error: " + (data.error || "Unknown");
         }
       } catch (err) {
-        resBox.textContent = "❌ Network or server error.";
-        console.error(err);
+        chat.querySelector(".bot:last-child").textContent = "❌ Network error.";
       }
     }
-  </script>
-</body>
+  </script></body>
 </html>
