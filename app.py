@@ -5,34 +5,30 @@ from flask import Flask, request, jsonify, send_file
 
 app = Flask(__name__)
 
-# Get API key from environment variable
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY")
-
-# Define models
-DEFAULT_MODEL = "deepseek/deepseek-chat-v3-0324:free"
 MAX_DOTS_MODEL = "openrouter/cypher-alpha:free"
+DEFAULT_MODEL = "deepseek/deepseek-r1:free"
 
 @app.route("/")
 def home():
     return send_file("index.html")
+
+@app.route("/settings.html")
+def settings():
+    return send_file("settings.html")
 
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
     user_input = data.get("message", "")
     max_dots_mode = data.get("maxDots", False)
+    selected_model = data.get("defaultModel", DEFAULT_MODEL)
+    model = MAX_DOTS_MODEL if max_dots_mode else selected_model
 
-    # Choose the correct model
-    model = MAX_DOTS_MODEL if max_dots_mode else DEFAULT_MODEL
-
-    # Build OpenRouter request payload
     payload = {
         "model": model,
         "messages": [
-            {
-                "role": "user",
-                "content": user_input
-            }
+            {"role": "user", "content": user_input}
         ]
     }
 
@@ -52,9 +48,5 @@ def chat():
         result = response.json()
         result["used_model"] = model
         return jsonify(result)
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
