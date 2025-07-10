@@ -9,7 +9,7 @@
     #chatbox { max-width: 600px; margin: auto; border: 1px solid #333; border-radius: 8px; padding: 1rem; background: #1e1e1e; }
     .msg { margin: 0.5rem 0; }
     .user { color: #9d4edd; }
-    .ai { color: #38bdf8; }
+    .ai { color: #38bdf8; white-space: pre-wrap; }
     #inputArea { display: flex; margin-top: 1rem; }
     input { flex: 1; padding: 0.5rem; border-radius: 6px; border: none; }
     button { margin-left: 0.5rem; padding: 0.5rem 1rem; border: none; background: #9d4edd; color: #fff; border-radius: 6px; }
@@ -52,8 +52,14 @@
           defaultModel: settings.defaultModel || 'deepseek/deepseek-r1:free'
         })
       });
-      const data = await res.json();
-      const aiMsg = data.choices?.[0]?.message?.content || data.error || '[No response]';
+
+      let aiMsg = '[No response]';
+      try {
+        const data = await res.json();
+        aiMsg = data.choices?.[0]?.message?.content || JSON.stringify(data, null, 2);
+      } catch (err) {
+        aiMsg = 'Error parsing response';
+      }
 
       const aiDiv = document.createElement('div');
       aiDiv.className = 'msg ai';
