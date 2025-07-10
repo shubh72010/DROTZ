@@ -1,72 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Flay's AI</title>
+  <meta charset="UTF-8">
+  <title>DORTZ</title>
   <style>
     body {
-      background: #0d0d0d;
+      background: #0e0e0e;
       color: #eee;
       font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       padding: 2rem;
+      max-width: 700px;
+      margin: auto;
+    }
+    h1 {
+      color: #9d4edd;
     }
     textarea {
       width: 100%;
-      max-width: 600px;
       height: 100px;
-      background: #1a1a1a;
-      color: #eee;
-      border: none;
-      border-radius: 8px;
       padding: 1rem;
       font-size: 1rem;
+      background: #1c1c1c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
       resize: none;
     }
     button {
-      margin-top: 1rem;
-      padding: 10px 20px;
       background: #9d4edd;
-      color: white;
+      color: #fff;
       border: none;
+      padding: 10px 20px;
+      margin-top: 10px;
       border-radius: 6px;
       cursor: pointer;
     }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
     #response {
       margin-top: 2rem;
-      max-width: 600px;
-      background: #1f1f1f;
+      background: #1a1a1a;
       padding: 1rem;
-      border-radius: 6px;
+      border-radius: 8px;
       white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
-  <h1>🧠 Flay's AI Chat</h1>
+  <h1>⚡ DORTZ Chat</h1>
+
   <textarea id="userInput" placeholder="Ask me anything..."></textarea>
+  <label>
+    <input type="checkbox" id="maxDotsToggle" />
+    Max Dots Mode (1,000,000 Token Brain 🧠)
+  </label>
   <button onclick="sendMessage()">Send</button>
+
   <div id="response">🤖 Response will appear here</div>
 
   <script>
     async function sendMessage() {
       const input = document.getElementById("userInput").value;
+      const maxDots = document.getElementById("maxDotsToggle").checked;
       const resBox = document.getElementById("response");
+
       resBox.textContent = "⏳ Thinking...";
 
-      const res = await fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input })
-      });
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: input,
+            maxDots: maxDots
+          })
+        });
 
-      const data = await res.json();
-      if (data.choices && data.choices[0]) {
-        resBox.textContent = data.choices[0].message.content;
-      } else {
-        resBox.textContent = "❌ Error: " + (data.error || "Unknown response");
+        const data = await res.json();
+
+        if (data.choices && data.choices[0]) {
+          resBox.innerHTML =
+            `<b>🧠 Model:</b> ${data.used_model}<br><br>` +
+            data.choices[0].message.content;
+        } else {
+          resBox.textContent = "⚠️ Error: " + (data.error || "Unknown response");
+        }
+      } catch (err) {
+        resBox.textContent = "❌ Network or server error.";
+        console.error(err);
       }
     }
   </script>
