@@ -1,175 +1,65 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>DORTZ - Max Dots Chat</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="https://api.iconify.design/ph/dots-nine-bold.svg" type="image/svg+xml">
+  <title>DORTZ</title>
   <style>
-    :root {
-      --user-bg: #9d4edd;
-      --bot-bg: #2a2a2a;
-      --bg: #0f0f0f;
-      --text: #eee;
-      --accent: #c77dff;
-      --radius: 14px;
-    }* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-
-header {
-  background: #1a1a1a;
-  padding: 1rem;
-  text-align: center;
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 1px;
-}
-
-#chat {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.bubble {
-  max-width: 80%;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius);
-  line-height: 1.5;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  animation: fadeIn 0.3s ease;
-}
-
-.user {
-  background-color: var(--user-bg);
-  color: #fff;
-  align-self: flex-end;
-  border-bottom-right-radius: 0;
-}
-
-.bot {
-  background-color: var(--bot-bg);
-  align-self: flex-start;
-  border-bottom-left-radius: 0;
-}
-
-footer {
-  padding: 1rem;
-  background: #1a1a1a;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-textarea {
-  width: 100%;
-  height: 60px;
-  padding: 0.75rem;
-  font-size: 1rem;
-  background: #222;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  resize: none;
-}
-
-button {
-  background: var(--user-bg);
-  color: #fff;
-  border: none;
-  font-weight: bold;
-  border-radius: 8px;
-  padding: 0.8rem;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-button:hover {
-  background: var(--accent);
-}
-
-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: #ccc;
-}
-
-@media (max-width: 600px) {
-  .bubble { max-width: 95%; }
-  textarea { height: 50px; }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
+    body { background: #0f0f0f; color: #fff; font-family: Arial, sans-serif; padding: 1rem; }
+    #chatbox { max-width: 600px; margin: auto; border: 1px solid #333; border-radius: 8px; padding: 1rem; background: #1e1e1e; }
+    .msg { margin: 0.5rem 0; }
+    .user { color: #9d4edd; }
+    .ai { color: #38bdf8; }
+    #inputArea { display: flex; margin-top: 1rem; }
+    input { flex: 1; padding: 0.5rem; border-radius: 6px; border: none; }
+    button { margin-left: 0.5rem; padding: 0.5rem 1rem; border: none; background: #9d4edd; color: #fff; border-radius: 6px; }
+    .settings-link { margin-top: 1rem; text-align: center; }
+    .settings-link a { color: #ccc; text-decoration: none; }
   </style>
 </head>
 <body>
-  <header>DORTZ 🟣 Max Dots Chat</header>  <div id="chat">
-    <div class="bot bubble">Welcome to <strong>DORTZ</strong>. Ask me anything.</div>
-  </div>  <footer>
-    <textarea id="userInput" placeholder="Type your message..."></textarea>
-    <label><input type="checkbox" id="maxDotsToggle"> Max Dots Mode (1M Token Brain 🧠)</label>
-    <button onclick="sendMessage()">Send</button>
-  </footer>  <script>
-    const chat = document.getElementById("chat");
-
-    function appendMessage(text, sender) {
-      const bubble = document.createElement("div");
-      bubble.className = `bubble ${sender}`;
-      bubble.textContent = text;
-      chat.appendChild(bubble);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
+  <div id="chatbox">
+    <div id="messages"></div>
+    <div id="inputArea">
+      <input type="text" id="messageInput" placeholder="Say something..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+  <div class="settings-link">
+    <a href="/settings.html">⚙️ Settings</a>
+  </div>
+  <script>
     async function sendMessage() {
-      const input = document.getElementById("userInput");
-      const message = input.value.trim();
-      const maxDots = document.getElementById("maxDotsToggle").checked;
+      const input = document.getElementById('messageInput');
+      const text = input.value;
+      if (!text) return;
 
-      if (!message) return;
-      appendMessage(message, "user");
-      input.value = "";
+      const settings = JSON.parse(localStorage.getItem('dortzSettings') || '{}');
 
-      appendMessage("DORTZ is thinking...", "bot");
+      const userDiv = document.createElement('div');
+      userDiv.className = 'msg user';
+      userDiv.innerText = 'You: ' + text;
+      document.getElementById('messages').appendChild(userDiv);
 
-      try {
-        const response = await fetch("/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message, maxDots })
-        });
+      input.value = '';
 
-        const data = await response.json();
-        const botBubble = chat.querySelector(".bot:last-child");
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          maxDots: settings.maxDots || false,
+          defaultModel: settings.defaultModel || 'deepseek/deepseek-r1:free'
+        })
+      });
+      const data = await res.json();
+      const aiMsg = data.choices?.[0]?.message?.content || data.error || '[No response]';
 
-        if (data.choices && data.choices[0]) {
-          botBubble.innerHTML = `<b>Model:</b> ${data.used_model}<br><br>${data.choices[0].message.content}`;
-        } else {
-          botBubble.textContent = "⚠️ Error: " + (data.error || "Unknown");
-        }
-      } catch (err) {
-        chat.querySelector(".bot:last-child").textContent = "❌ Network error.";
-      }
+      const aiDiv = document.createElement('div');
+      aiDiv.className = 'msg ai';
+      aiDiv.innerText = 'DORTZ: ' + aiMsg;
+      document.getElementById('messages').appendChild(aiDiv);
     }
-  </script></body>
+  </script>
+</body>
 </html>
